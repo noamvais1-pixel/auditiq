@@ -1,5 +1,7 @@
 # AuditIQ
 
+[![CI](https://github.com/noamvais1-pixel/auditiq/actions/workflows/ci.yml/badge.svg)](https://github.com/noamvais1-pixel/auditiq/actions/workflows/ci.yml)
+
 עוזר AI לרואי חשבון ומבקרים, שעונה **רק** על סמך מקורות במאגר ומצטט אותם ברמת
 הסעיף. עברית, RTL, עם הסרת מידע מזהה לפני כל פנייה למודל ולוג ביקורת עמיד לשינוי.
 
