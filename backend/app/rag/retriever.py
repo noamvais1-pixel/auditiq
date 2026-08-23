@@ -52,7 +52,7 @@ class Index:
         self.chunks = chunks
         texts = [c.embed_text for c in chunks]
         self.bm25.fit(texts)
-        self.vectors = self.provider.embed(texts) if texts else []
+        self.vectors = self.provider.embed(texts, task="document") if texts else []
         return self
 
     def save(self, path: str | Path) -> None:
@@ -99,7 +99,7 @@ class Index:
         lexical = self.bm25.score(query)
         lex_order = sorted(range(len(lexical)), key=lambda i: -lexical[i])[:candidates]
 
-        q_vec = self.provider.embed([query])[0]
+        q_vec = self.provider.embed([query], task="query")[0]
         dense = [cosine(q_vec, v) for v in self.vectors]
         dense_order = sorted(range(len(dense)), key=lambda i: -dense[i])[:candidates]
 

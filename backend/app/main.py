@@ -46,6 +46,7 @@ def health() -> dict:
     return {
         "status": "ok",
         "mode": assistant.llm.mode,
+        "provider": assistant.llm.provider_name,
         "model": assistant.llm.model if assistant.llm.mode == "live" else None,
         "embedding_provider": assistant.index.provider.name,
         "chunks_indexed": len(assistant.index.chunks),

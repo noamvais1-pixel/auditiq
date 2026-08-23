@@ -6,6 +6,16 @@ from pathlib import Path
 
 BASE_DIR = Path(__file__).resolve().parents[1]
 
+# Load .env from the repo root before any setting is read, so `make api`,
+# `make eval` and pytest all see the same configuration without the caller
+# having to export anything.
+try:
+    from dotenv import load_dotenv
+
+    load_dotenv(BASE_DIR.parent / ".env")
+except ImportError:  # optional dependency; env vars still work
+    pass
+
 
 @dataclass(frozen=True)
 class Settings:
