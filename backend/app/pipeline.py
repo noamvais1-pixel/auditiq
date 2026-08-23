@@ -115,7 +115,7 @@ class Assistant:
                 "blocked": report.blocked,
                 "invalid_citations": report.invalid_citations,
                 "uncited_claims": len(report.uncited_claims),
-                "tools_used": [t["name"] for t in gen.tool_calls],
+                "tools_used": [{"name": t["name"], "input": t["input"]} for t in gen.tool_calls],
             },
         )
 

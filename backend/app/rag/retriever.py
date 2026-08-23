@@ -53,6 +53,14 @@ class Index:
         texts = [c.embed_text for c in chunks]
         self.bm25.fit(texts)
         self.vectors = self.provider.embed(texts, task="document") if texts else []
+        # A provider that quietly returns the wrong number of vectors misaligns
+        # every chunk with someone else's embedding, and retrieval degrades
+        # without a single error being raised. Cheap check, expensive bug.
+        if len(self.vectors) != len(texts):
+            raise RuntimeError(
+                f"embedding provider {self.provider.name!r} returned "
+                f"{len(self.vectors)} vectors for {len(texts)} chunks"
+            )
         return self
 
     def save(self, path: str | Path) -> None:

@@ -104,8 +104,11 @@ def eval_grounding(assistant: Assistant, cases: list[dict]) -> dict:
     live = assistant.llm.mode == "live"
 
     by_gate: dict[str, list[dict]] = defaultdict(list)
+    degraded: list[str] = []
     for case in oos:
         ans = assistant.ask(case["question"], session_id="eval")
+        if ans.mode == "degraded":
+            degraded.append(case["id"])
         refused = bool(ans.grounding["blocked"] or ans.grounding["is_refusal"] or not ans.sources)
         by_gate[case.get("gate", "lexical")].append(
             {"id": case["id"], "refused": refused, "stopped_at": ans.mode}
@@ -117,11 +120,17 @@ def eval_grounding(assistant: Assistant, cases: list[dict]) -> dict:
     fabricated, checked = 0, 0
     for case in in_scope[:10]:  # sampled -- this half costs tokens in live mode
         ans = assistant.ask(case["question"], session_id="eval")
+        if ans.mode == "degraded":
+            degraded.append(case["id"])
         fabricated += len(ans.grounding["invalid_citations"])
         checked += len(ans.grounding["valid_citations"]) + len(ans.grounding["invalid_citations"])
 
     return {
         "live": live,
+        # A live run where some answers fell back to the extractive path did not
+        # measure what it claims to have measured. Surfaced, and gated, rather
+        # than averaged into the score.
+        "degraded_answers": degraded,
         "refusal_rate_lexical": rate(by_gate["lexical"]),
         "refusal_rate_model": rate(by_gate["model"]) if live else None,
         "model_gate_skipped": not live,
@@ -148,6 +157,11 @@ def main() -> int:
 
     report = {
         "embedding_provider": index.provider.name,
+        # Recorded because a score is only reproducible if you know what produced
+        # it -- and because free-tier daily caps mean the model used for a given
+        # run is not always the configured default.
+        "llm_provider": assistant.llm.provider_name,
+        "llm_model": assistant.llm.model,
         "llm_mode": assistant.llm.mode,
         "k": args.k,
         "retrieval": retrieval,
@@ -168,7 +182,8 @@ def main() -> int:
 def _print_report(report: dict, k: int) -> None:
     r = report["retrieval"]
     g = report["grounding"]
-    print(f"\nembeddings={report['embedding_provider']}  llm={report['llm_mode']}  k={k}")
+    print(f"\nembeddings={report['embedding_provider']}  "
+          f"llm={report['llm_provider']}/{report['llm_model']} ({report['llm_mode']})  k={k}")
     print("\n-- retrieval " + "-" * 46)
     print(f"{'kind':<14}{'n':>4}{'recall@'+str(k):>12}{'mrr':>8}")
     for kind, stats in r["by_kind"].items():
@@ -193,6 +208,9 @@ def _print_report(report: dict, k: int) -> None:
                 print(f"    [{gate}] answered instead of refusing: {row['id']}")
     print(f"citation validity       : {g['citation_validity']} "
           f"({g['fabricated_citations']} fabricated / {g['citations_checked']} checked)")
+    if g["degraded_answers"]:
+        print(f"degraded to fallback    : {len(g['degraded_answers'])} "
+              f"-> {', '.join(g['degraded_answers'])}")
     print()
 
 
@@ -210,6 +228,11 @@ def _check(report: dict, k: int) -> list[str]:
     mod = g["refusal_rate_model"]
     if mod is not None and mod < THRESHOLDS["refusal_rate_model"]:
         out.append(f"refusal_rate_model={mod} < {THRESHOLDS['refusal_rate_model']}")
+    if g["degraded_answers"]:
+        out.append(
+            f"{len(g['degraded_answers'])} answers fell back to the extractive path; "
+            "this run did not measure the model"
+        )
     if g["citation_validity"] < THRESHOLDS["citation_validity"]:
         out.append(f"citation_validity={g['citation_validity']} < {THRESHOLDS['citation_validity']}")
     return out

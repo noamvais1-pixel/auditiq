@@ -19,6 +19,7 @@ import math
 import os
 from typing import Protocol, Sequence
 
+from ..config import env
 from .hebrew import normalise, strip_diacritics
 
 
@@ -132,6 +133,13 @@ class GeminiEmbeddings:
 
     Requests are batched because the endpoint caps how many inputs it accepts per
     call, and a 400 halfway through an ingest is an annoying way to find that out.
+
+    Each input is wrapped in its own ``Content``. Passing a plain list of strings
+    looks like it batches and does not: the SDK reads the list as several parts of
+    a *single* document and returns one vector for the whole batch. Nothing
+    errors -- an 81-chunk corpus silently produced 2 vectors, retrieval ranked
+    against the wrong chunks, and the only symptom was a mediocre MRR that looked
+    like an embedding-quality problem. Hence the length check below.
     """
 
     name = "gemini"
@@ -144,34 +152,50 @@ class GeminiEmbeddings:
         from google import genai
 
         self.client = genai.Client(api_key=os.environ["GOOGLE_API_KEY"])
-        self.model = model or os.getenv("GEMINI_EMBEDDING_MODEL", "gemini-embedding-001")
+        self.model = model or env("GEMINI_EMBEDDING_MODEL", "gemini-embedding-2")
         self.dim = dim
 
     def embed(self, texts: Sequence[str], task: str = "document") -> list[list[float]]:
         from google.genai import types
 
         config = types.EmbedContentConfig(task_type=self._TASK.get(task, "RETRIEVAL_DOCUMENT"))
+        items = [types.Content(parts=[types.Part(text=t)]) for t in texts]
         out: list[list[float]] = []
-        batch: list[str] = list(texts)
-        for i in range(0, len(batch), self.BATCH):
+        for i in range(0, len(items), self.BATCH):
             resp = self.client.models.embed_content(
-                model=self.model, contents=batch[i : i + self.BATCH], config=config
+                model=self.model, contents=items[i : i + self.BATCH], config=config
             )
             out.extend(_l2(list(e.values)) for e in resp.embeddings)
+
+        if len(out) != len(texts):
+            raise RuntimeError(
+                f"{self.name} returned {len(out)} vectors for {len(texts)} inputs -- "
+                "inputs were merged rather than embedded separately"
+            )
         if out:
             self.dim = len(out[0])
         return out
 
 
-def get_provider(name: str | None = None) -> EmbeddingProvider:
-    name = (name or os.getenv("EMBEDDING_PROVIDER") or "local").lower()
+def get_provider(name: str | None = None, cache: bool = True) -> EmbeddingProvider:
+    """Resolve the configured provider, wrapping hosted ones in a disk cache.
+
+    The local fallback is not cached: it is pure CPU, and a cache would only add
+    a file to keep in sync.
+    """
+    name = (name or env("EMBEDDING_PROVIDER") or "local").lower()
     try:
-        if name == "gemini":
-            return GeminiEmbeddings()
-        if name == "voyage":
-            return VoyageEmbeddings()
-        if name == "openai":
-            return OpenAIEmbeddings()
+        hosted = {"gemini": GeminiEmbeddings, "voyage": VoyageEmbeddings, "openai": OpenAIEmbeddings}
+        if name in hosted:
+            provider = hosted[name]()
+            if not cache:
+                return provider
+            from pathlib import Path
+
+            from .embed_cache import CachedEmbeddings
+
+            cache_path = Path(__file__).resolve().parents[2] / "data" / "embed_cache.json"
+            return CachedEmbeddings(provider, cache_path)
     except Exception as exc:  # missing dep or key -- degrade loudly, not silently
         import logging
 

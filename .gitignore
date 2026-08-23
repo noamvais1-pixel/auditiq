@@ -8,3 +8,4 @@ dist/
 backend/data/index.json
 backend/data/audit.jsonl
 .DS_Store
+backend/data/embed_cache.json

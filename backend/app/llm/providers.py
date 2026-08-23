@@ -26,11 +26,21 @@ import os
 from dataclasses import dataclass, field
 from typing import Any, Iterator, Protocol
 
+from ..config import env
 from .tools import TOOL_SCHEMAS, run_tool
 
 log = logging.getLogger(__name__)
 
-MAX_TOOL_ROUNDS = 4
+MAX_TOOL_ROUNDS = 6
+
+# When the rounds are spent, the model has usually done all the arithmetic it
+# needed and simply has not written the prose yet -- a question like "which
+# materiality benchmark, and what is performance materiality?" legitimately wants
+# several calculations before a single answer. Returning an error there throws
+# away completed, correct work and shows the user nothing.
+#
+# So the last step is one more call with the tools withdrawn. With no tool to
+# reach for, the model has to answer from the results it already has.
 
 
 @dataclass
@@ -59,7 +69,7 @@ class AnthropicProvider:
         from anthropic import Anthropic
 
         self.client = Anthropic()
-        self.model = model or os.getenv("ANTHROPIC_MODEL", "claude-sonnet-4-5")
+        self.model = model or env("ANTHROPIC_MODEL", "claude-sonnet-4-5")
 
     def generate(self, system: str, user_turn: str) -> Generation:
         messages: list[dict[str, Any]] = [{"role": "user", "content": user_turn}]
@@ -96,7 +106,14 @@ class AnthropicProvider:
                 })
             messages.append({"role": "user", "content": results})
 
-        return Generation(_ROUNDS_EXHAUSTED, self.model, "live", tool_calls, usage, "max_tool_rounds")
+        final = self.client.messages.create(
+            model=self.model, max_tokens=2048, system=system, messages=messages,
+        )  # note: no `tools=` -- that is the point
+        usage["input_tokens"] += final.usage.input_tokens
+        usage["output_tokens"] += final.usage.output_tokens
+        text = "".join(b.text for b in final.content if b.type == "text")
+        return Generation(text or _ROUNDS_EXHAUSTED, self.model, "live",
+                          tool_calls, usage, "max_tool_rounds")
 
     def stream(self, system: str, user_turn: str) -> Iterator[str]:
         with self.client.messages.stream(
@@ -137,7 +154,7 @@ class GeminiProvider:
 
         self._types = types
         self.client = genai.Client(api_key=os.environ["GOOGLE_API_KEY"])
-        self.model = model or os.getenv("GEMINI_MODEL", "gemini-2.5-flash")
+        self.model = model or env("GEMINI_MODEL", "gemini-3.5-flash")
         self._tools = [
             types.Tool(
                 function_declarations=[
@@ -151,11 +168,11 @@ class GeminiProvider:
             )
         ]
 
-    def _config(self, system: str):
+    def _config(self, system: str, with_tools: bool = True):
         types = self._types
         return types.GenerateContentConfig(
             system_instruction=system,
-            tools=self._tools,
+            tools=self._tools if with_tools else None,
             # Tools are executed explicitly rather than by the SDK's automatic
             # loop, so every call and its result lands in the audit record.
             automatic_function_calling=types.AutomaticFunctionCallingConfig(disable=True),
@@ -195,7 +212,12 @@ class GeminiProvider:
                 )
             contents.append(types.Content(role="user", parts=parts))
 
-        return Generation(_ROUNDS_EXHAUSTED, self.model, "live", tool_calls, usage, "max_tool_rounds")
+        final = self.client.models.generate_content(
+            model=self.model, contents=contents, config=self._config(system, with_tools=False)
+        )
+        self._accumulate(usage, final.usage_metadata)
+        return Generation(final.text or _ROUNDS_EXHAUSTED, self.model, "live",
+                          tool_calls, usage, "max_tool_rounds")
 
     def stream(self, system: str, user_turn: str) -> Iterator[str]:
         types = self._types
@@ -262,12 +284,12 @@ def build_provider(name: str | None = None) -> ModelProvider:
     Explicit ``LLM_PROVIDER`` wins. Otherwise whichever key is present is used --
     convenient locally, and unambiguous in deployment where the variable is set.
     """
-    name = (name or os.getenv("LLM_PROVIDER") or "").lower()
+    name = (name or env("LLM_PROVIDER") or "").lower()
 
     if not name:
-        if os.getenv("GOOGLE_API_KEY"):
+        if env("GOOGLE_API_KEY"):
             name = "gemini"
-        elif os.getenv("ANTHROPIC_API_KEY"):
+        elif env("ANTHROPIC_API_KEY"):
             name = "anthropic"
 
     if not name:
