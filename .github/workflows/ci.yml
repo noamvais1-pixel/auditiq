@@ -1,0 +1,36 @@
+name: CI
+
+on:
+  push: { branches: [main] }
+  pull_request:
+
+jobs:
+  backend:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: { python-version: "3.13" }
+      - run: pip install -r backend/requirements.txt
+      - run: python -m app.ingest
+        working-directory: backend
+      - run: python -m pytest tests -q
+        working-directory: backend
+      # Runs without an API key, so the eval reports the semantic coverage gate
+      # as SKIPPED rather than passing it silently. The lexical gate, retrieval
+      # metrics and citation validity are all enforced here.
+      - run: python evals/run_evals.py
+        working-directory: backend
+
+  frontend:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: "22", cache: npm, cache-dependency-path: frontend/package-lock.json }
+      - run: npm ci
+        working-directory: frontend
+      - run: npm run typecheck
+        working-directory: frontend
+      - run: npm run build
+        working-directory: frontend

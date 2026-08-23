@@ -1,0 +1,32 @@
+{"id": "vat-rate-today", "question": "מה שיעור המע\"מ בישראל?", "gold": ["vat-basics#1"], "kind": "retrieval", "note": "מונח מפתח מופיע בשאלה"}
+{"id": "vat-rate-2024", "question": "עסקה שמועד החיוב בה היה ביוני 2024, באיזה שיעור מע\"מ היא מתחייבת?", "gold": ["vat-basics#1", "vat-basics#2"], "kind": "retrieval", "note": "דורש את כלל המועד הקובע, לא רק את השיעור"}
+{"id": "vat-paraphrase", "question": "לקוח משלם לי בתשלומים על פרויקט ארוך. מתי אני מוציא חשבונית?", "gold": ["vat-basics#5"], "kind": "paraphrase", "note": "אין חפיפה לקסיקלית עם 'תשלומים משתלמת'"}
+{"id": "vat-zero-vs-exempt", "question": "מה ההבדל בין עסקה בשיעור אפס לעסקה פטורה?", "gold": ["vat-basics#7"], "kind": "retrieval"}
+{"id": "vat-car-input", "question": "האם אפשר לקזז מע\"מ על רכב שקניתי לחברה?", "gold": ["vat-basics#10"], "kind": "paraphrase", "note": "'לקזז' מול 'לנכות', 'רכב לחברה' מול 'רכב פרטי'"}
+{"id": "vat-hosting", "question": "ארחתי לקוח במסעדה, מותר לנכות את המע\"מ?", "gold": ["vat-basics#11"], "kind": "paraphrase"}
+{"id": "dep-start", "question": "מאיזה רגע מתחילים לרשום פחת על נכס?", "gold": ["depreciation#6"], "kind": "paraphrase"}
+{"id": "dep-idle", "question": "מכונה יצאה משירות לחצי שנה, ממשיכים להפחית אותה?", "gold": ["depreciation#7"], "kind": "paraphrase", "note": "המקור מנוסח כשלילה — מלכודת לאחזור סמנטי"}
+{"id": "dep-components", "question": "מתי צריך להפחית רכיב של נכס בנפרד?", "gold": ["depreciation#8"], "kind": "retrieval"}
+{"id": "dep-estimate-change", "question": "שיניתי את אומדן אורך החיים של נכס. מתקנים למפרע?", "gold": ["depreciation#10"], "kind": "paraphrase"}
+{"id": "dep-computer-rate", "question": "מה שיעור הפחת על מחשבים לצורכי מס?", "gold": ["depreciation#11"], "kind": "retrieval"}
+{"id": "mat-loss-making", "question": "החברה כמעט באיזון תפעולי. איזה מדד מהותיות לבחור?", "gold": ["audit-materiality#5"], "kind": "paraphrase", "note": "'כמעט באיזון' מול 'קרובה לאיזון'"}
+{"id": "mat-performance", "question": "איך קובעים מהותיות ביצוע ובאיזה טווח?", "gold": ["audit-materiality#7"], "kind": "retrieval"}
+{"id": "mat-high-risk", "question": "הסיכון בתיק גבוה. זה משפיע על אחוז מהותיות הביצוע?", "gold": ["audit-materiality#8"], "kind": "paraphrase"}
+{"id": "mat-related-party", "question": "האם צריך מהותיות נמוכה יותר לעסקאות עם בעלי עניין?", "gold": ["audit-materiality#9"], "kind": "paraphrase"}
+{"id": "rev-five-steps", "question": "מהם חמשת השלבים בהכרה בהכנסה?", "gold": ["revenue-recognition#2", "revenue-recognition#3", "revenue-recognition#4", "revenue-recognition#7", "revenue-recognition#8"], "kind": "multi", "note": "דורש כמה צ'אנקים — בודק recall ולא רק hit ראשון"}
+{"id": "rev-financing", "question": "הלקוח משלם לי 18 חודשים אחרי האספקה. צריך להפריד רכיב ריבית?", "gold": ["revenue-recognition#6"], "kind": "paraphrase"}
+{"id": "rev-over-time", "question": "מתי מכירים בהכנסה לאורך זמן ולא בנקודת זמן?", "gold": ["revenue-recognition#9"], "kind": "retrieval"}
+{"id": "lease-short", "question": "שכרתי משרד לתשעה חודשים. חייב להכיר בנכס זכות שימוש?", "gold": ["leases#2"], "kind": "paraphrase"}
+{"id": "lease-discount-rate", "question": "באיזו ריבית מהוונים את התחייבות החכירה?", "gold": ["leases#5"], "kind": "retrieval"}
+{"id": "lease-expense-shape", "question": "למה ההוצאה בחכירה גבוהה יותר בשנים הראשונות?", "gold": ["leases#10"], "kind": "paraphrase"}
+{"id": "rp-supplier", "question": "ספק שמהווה 60% מהרכש שלנו — הוא צד קשור?", "gold": ["related-parties#5"], "kind": "paraphrase", "note": "התשובה הנכונה היא 'לא' — בודק אם המערכת מאתרת מקור ששולל"}
+{"id": "rp-no-transactions", "question": "לא היו עסקאות עם החברה האם השנה. עדיין צריך גילוי?", "gold": ["related-parties#6"], "kind": "paraphrase"}
+{"id": "rp-key-management", "question": "איך מפלחים את הגילוי על תגמול נושאי משרה?", "gold": ["related-parties#9"], "kind": "retrieval"}
+{"id": "dt-loss-carryforward", "question": "לחברה הפסדים צבורים גדולים. אפשר להכיר בנכס מס נדחה?", "gold": ["deferred-tax#4", "deferred-tax#5"], "kind": "multi"}
+{"id": "dt-discounting", "question": "מהוונים מסים נדחים לערך נוכחי?", "gold": ["deferred-tax#9"], "kind": "retrieval"}
+{"id": "dt-classification", "question": "מסים נדחים מוצגים כשוטפים או כלא שוטפים?", "gold": ["deferred-tax#10"], "kind": "retrieval"}
+{"id": "oos-crypto", "question": "איך מטפלים חשבונאית במטבעות קריפטוגרפיים?", "gold": [], "kind": "out_of_scope", "note": "אין חפיפת אוצר מילים כלל — נתפס בשכבה הלקסיקלית", "gate": "lexical"}
+{"id": "oos-payroll", "question": "מה שיעור דמי הביטוח הלאומי למעסיק?", "gold": [], "kind": "out_of_scope", "gate": "model", "note": "המילה 'שיעור' מספיקה כדי לעבור כל סף לקסיקלי. דורש שיפוט סמנטי של המודל."}
+{"id": "oos-weather", "question": "מה מזג האוויר בתל אביב מחר?", "gold": [], "kind": "out_of_scope", "note": "מחוץ לדומיין לגמרי — נתפס בשכבה הלקסיקלית", "gate": "lexical"}
+{"id": "dep-building-with-pii", "question": "הלקוח ישראל ישראלי, ת.ז 123456782, טלפון 052-1234567, רכש מבנה. מה שיעור הפחת?", "gold": ["depreciation#11"], "kind": "paraphrase", "note": "רגרסיה: מציני PII זיהמו את שאילתת האחזור, ו'מבנה' לא מצא 'מבנים' לפני הוספת הגזירה"}
+{"id": "dep-building-plain", "question": "מה שיעור הפחת על מבנה?", "gold": ["depreciation#11"], "kind": "retrieval", "note": "אותה שאלה בלי PII — מבודד את השפעת המציינים"}

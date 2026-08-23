@@ -1,0 +1,19 @@
+{
+  "_note": "Rates live in data, not in the prompt. A model asked to remember a tax rate will confidently produce last year's. Each entry is effective-dated so a question about a 2024 transaction gets the 2024 rate.",
+  "_source_note": "ערכי הדגמה. יש לאמת מול המקור הרשמי לפני שימוש בעבודה אמיתית.",
+  "vat": [
+    { "from": "2015-10-01", "to": "2024-12-31", "rate": 0.17 },
+    { "from": "2025-01-01", "to": null, "rate": 0.18 }
+  ],
+  "corporate_tax": [
+    { "from": "2018-01-01", "to": null, "rate": 0.23 }
+  ],
+  "depreciation": {
+    "מבנה": 0.04,
+    "ציוד": 0.07,
+    "מכונות": 0.15,
+    "מחשבים": 0.33,
+    "ריהוט": 0.06,
+    "רכב": 0.15
+  }
+}
