@@ -3,6 +3,8 @@
    mirroring a hand-tuned LTR stylesheet after the fact is a rewrite. */
 
 :root {
+  /* Lets the browser theme scrollbars, form controls and the canvas to match the dark palette below */
+  color-scheme: light dark;
   --bg: #f6f7f9;
   --surface: #ffffff;
   --ink: #16191d;

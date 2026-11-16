@@ -67,7 +67,7 @@ export default function App() {
   const onCite = useCallback((chunkId: string) => {
     setHighlighted(chunkId);
     document.getElementById(`src-${chunkId}`)?.scrollIntoView({
-      behavior: "smooth",
+      behavior: matchMedia("(prefers-reduced-motion: reduce)").matches ? "auto" : "smooth",
       block: "center",
     });
   }, []);
